@@ -27,6 +27,42 @@ if (-not (Test-Administrator)) {
     exit 1
 }
 
+# Key và thời gian sử dụng
+$auth = "96f22dfdaff8a8a944ed93b3b5fbd20d" # Key cố định
+$validity_period = 30 # Số ngày hợp lệ kể từ ngày kích hoạt
+$activation_date = Get-Date
+$expiration_date = $activation_date.AddDays($validity_period)
+
+# Kiểm tra nếu key còn hiệu lực
+function Check-KeyValidity {
+    param (
+        [string]$key,
+        [datetime]$expirationDate
+    )
+    
+    if ($key -eq $auth) {
+        if ((Get-Date) -lt $expirationDate) {
+            Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian sử dụng còn lại: $($expirationDate - (Get-Date)).Days ngày"
+            return $true
+        }
+        else {
+            Write-Host "$RED[Lỗi]$NC Key đã hết hạn. Vui lòng nhập key mới."
+            return $false
+        }
+    }
+    else {
+        Write-Host "$RED[Lỗi]$NC Key không hợp lệ."
+        return $false
+    }
+}
+
+# Kiểm tra tính hợp lệ của key
+$validKey = Check-KeyValidity -key $auth -expirationDate $expiration_date
+if (-not $validKey) {
+    Read-Host "Nhấn phím Enter để thoát"
+    exit 1
+}
+
 # Hiển thị Logo
 Clear-Host
 Write-Host @"
