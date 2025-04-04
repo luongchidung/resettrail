@@ -69,6 +69,7 @@ catch {
     exit 1
 }
 
+
 # Tiếp tục phần kiểm tra key
 $auth = Read-Host "Nhập key của bạn"
 
