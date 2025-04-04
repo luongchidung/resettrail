@@ -27,6 +27,68 @@ if (-not (Test-Administrator)) {
     exit 1
 }
 
+# Hàm tạo key ngẫu nhiên
+function Generate-Key {
+    $length = 32  # Độ dài của key
+    $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    $key = -join ((1..$length) | ForEach-Object { $chars[(Get-Random -Minimum 0 -Maximum $chars.Length)] })
+    return $key
+}
+
+# Tạo key mới và tính ngày hết hạn
+function Create-NewKey {
+    # Tạo key ngẫu nhiên
+    $key = Generate-Key
+
+    # Ngày hiện tại (ngày kích hoạt)
+    $activationDate = Get-Date
+
+    # Tính toán ngày hết hạn (30 ngày sau)
+    $expiryDate = $activationDate.AddDays(30)
+
+    # Chuyển đổi ngày hết hạn thành chuỗi
+    $expiryDateString = $expiryDate.ToString("yyyy-MM-dd HH:mm:ss")
+
+    # Lưu thông tin key và ngày hết hạn vào tệp JSON
+    $keyInfo = @{
+        key = $key
+        activationDate = $activationDate.ToString("yyyy-MM-dd HH:mm:ss")
+        expiryDate = $expiryDateString
+    }
+
+    # Lưu vào tệp key_usage.json
+    $keyInfo | ConvertTo-Json | Set-Content -Path "$env:APPDATA\key_usage.json" -Force
+    Write-Host "$GREEN[Thông tin]$NC Thông tin key đã được lưu vào tệp key_usage.json"
+}
+
+# Kiểm tra key từ tệp JSON
+function Validate-Key {
+    # Đọc thông tin từ tệp JSON
+    $keyUsageContent = Get-Content "$env:APPDATA\key_usage.json" | ConvertFrom-Json
+    $storedKey = $keyUsageContent.key
+    $storedExpiryDate = [datetime]::Parse($keyUsageContent.expiryDate)
+
+    $currentTime = Get-Date
+
+    # Kiểm tra nếu key hợp lệ và chưa hết hạn
+    if ($currentTime -lt $storedExpiryDate) {
+        Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $storedExpiryDate"
+        Write-Host "$GREEN[Thông tin]$NC Tiến hành thực hiện script."
+    } else {
+        Write-Host "$RED[Lỗi]$NC Key đã hết hạn. Vui lòng cập nhật key mới."
+        Create-NewKey
+    }
+}
+
+# Kiểm tra key
+if (-not (Test-Path "$env:APPDATA\key_usage.json")) {
+    Write-Host "$YELLOW[Thông tin]$NC Không tìm thấy tệp key_usage.json, tạo key mới..."
+    Create-NewKey
+}
+
+Validate-Key
+ 
+
 # Hiển thị Logo
 Clear-Host
 Write-Host @"
@@ -46,40 +108,46 @@ Write-Host "$YELLOW  Zalo: 0847154088 $NC"
 Write-Host "$BLUE================================$NC"
 Write-Host ""
 
-# Đọc và xử lý key từ tệp JSON trên GitHub
-$keyUsageUrl = "https://raw.githubusercontent.com/luongchidung/resettrail/master/scripts/key_usage.txt"
-$keyUsageContent = Invoke-RestMethod -Uri $keyUsageUrl
-
-# Kiểm tra xem dữ liệu có chứa key và expiry không
-if ($keyUsageContent.key -and $keyUsageContent.expiry) {
-    $key = $keyUsageContent.key
-    $expiryDate = $keyUsageContent.expiry
-
-    Write-Host "Key: $key"
-    Write-Host "Thời gian hết hạn: $expiryDate"
-
-    # Kiểm tra thời gian hết hạn
-    $currentTime = Get-Date
-
-    # Kiểm tra nếu key hợp lệ và chưa hết hạn
+# Lấy và hiển thị phiên bản Cursor
+function Get-CursorVersion {
     try {
-        $parsedExpiryDate = [datetime]::ParseExact($expiryDate, 'yyyy-MM-dd HH:mm:ss', $null)
-        if ($currentTime -lt $parsedExpiryDate) {
-            Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $expiryDate"
-            Write-Host "$GREEN[Thông tin]$NC Tiến hành thực hiện script."
-        } else {
-            Write-Host "$RED[Lỗi]$NC Key đã hết hạn. Vui lòng cập nhật key mới."
-            exit 1
+        # Kiểm tra đường dẫn chính
+        $packagePath = "$env:LOCALAPPDATA\Programs\cursor\resources\app\package.json"
+        
+        if (Test-Path $packagePath) {
+            $packageJson = Get-Content $packagePath -Raw | ConvertFrom-Json
+            if ($packageJson.version) {
+                Write-Host "$GREEN[Thông tin]$NC Phiên bản Cursor hiện tại: v$($packageJson.version)"
+                return $packageJson.version
+            }
         }
+
+        # Kiểm tra đường dẫn thay thế
+        $altPath = "$env:LOCALAPPDATA\cursor\resources\app\package.json"
+        if (Test-Path $altPath) {
+            $packageJson = Get-Content $altPath -Raw | ConvertFrom-Json
+            if ($packageJson.version) {
+                Write-Host "$GREEN[Thông tin]$NC Phiên bản Cursor hiện tại: v$($packageJson.version)"
+                return $packageJson.version
+            }
+        }
+
+        Write-Host "$YELLOW[Cảnh báo]$NC Không thể phát hiện phiên bản Cursor"
+        Write-Host "$YELLOW[Lưu ý]$NC Vui lòng đảm bảo rằng Cursor đã được cài đặt chính xác"
+        return $null
     }
     catch {
-        Write-Host "$RED[Lỗi]$NC Không thể phân tích thời gian hết hạn: $expiryDate"
-        exit 1
+        Write-Host "$RED[Lỗi]$NC Lỗi khi lấy phiên bản Cursor: $_"
+        return $null
     }
-} else {
-    Write-Host "$RED[Lỗi]$NC Không tìm thấy key hoặc thời gian hết hạn trong tệp cấu hình."
-    exit 1
 }
+
+# Lấy và hiển thị thông tin phiên bản
+$cursorVersion = Get-CursorVersion
+Write-Host ""
+
+Write-Host "$YELLOW[Lưu ý quan trọng]$NC Phiên bản mới nhất là 0.47.x (được hỗ trợ)"
+Write-Host ""
 
 # Kiểm tra và đóng tiến trình Cursor
 Write-Host "$GREEN[Thông tin]$NC Kiểm tra tiến trình Cursor..."
