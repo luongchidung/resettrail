@@ -39,11 +39,11 @@ Write-Host @"
     ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
 
 "@
-Write-Host ("$BLUE================================$NC")
+Write-Host "$BLUE================================$NC"
 Write-Host "$GREEN   Công cụ thay đổi ID thiết bị Cursor $NC"
 Write-Host "$YELLOW  Facebook: Luong Chi Dung $NC"
 Write-Host "$YELLOW  Zalo: 0847154088 $NC"
-Write-Host ("$BLUE================================$NC")
+Write-Host "$BLUE================================$NC"
 Write-Host ""
 
 # Lấy và hiển thị phiên bản Cursor
@@ -92,180 +92,7 @@ Write-Host "$GREEN[Thông tin]$NC Kiểm tra tiến trình Cursor..."
 
 function Get-ProcessDetails {
     param($processName)
-    Write-Host "$BLUE[Debug]$NC Đang lấy chi tiết tiến trình của ${processName}:" 
-    Get-WmiObject Win32_Process -Filter "name='$processName'" | 
-        Select-Object ProcessId, ExecutablePath, CommandLine | 
-        Format-List
-}
-
-# Định nghĩa số lần thử tối đa và thời gian chờ
-$MAX_RETRIES = 5
-$WAIT_TIME = 1
-
-# Đóng tiến trình Cursor
-function Close-CursorProcess {
-    param($processName)
-    
-    $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-    if ($process) {
-        Write-Host "$YELLOW[Cảnh báo]$NC Phát hiện $processName đang chạy"
-        Get-ProcessDetails $processName
-        
-        Write-Host "$YELLOW[Cảnh báo]$NC Đang cố gắng đóng $processName..."
-        Stop-Process -Name $processName -Force
-        
-        $retryCount = 0
-        while ($retryCount -lt $MAX_RETRIES) {
-            $process = Get-Process -Name $processName -ErrorAction SilentlyContinue
-            if (-not $process) { break }
-            
-            $retryCount++
-            if ($retryCount -ge $MAX_RETRIES) {
-                Write-Host "$RED[Lỗi]$NC Không thể đóng $processName sau $MAX_RETRIES lần thử"
-                Get-ProcessDetails $processName
-                Write-Host "$RED[Lỗi]$NC Vui lòng đóng tiến trình thủ công và thử lại"
-                Read-Host "Nhấn phím Enter để thoát"
-                exit 1
-            }
-            Write-Host "$YELLOW[Cảnh báo]$NC Đang chờ đóng tiến trình, thử $retryCount/$MAX_RETRIES..."
-            Start-Sleep -Seconds $WAIT_TIME
-        }
-        Write-Host "$GREEN[Thông tin]$NC $processName đã được đóng thành công"
-    }
-}
-
-# Đóng tất cả tiến trình Cursor
-Close-CursorProcess "Cursor"
-Close-CursorProcess "cursor"
-
-# Tạo thư mục sao lưu
-if (-not (Test-Path $BACKUP_DIR)) {
-    New-Item -ItemType Directory -Path $BACKUP_DIR | Out-Null
-}
-
-# Sao lưu cấu hình hiện tại
-if (Test-Path $STORAGE_FILE) {
-    Write-Host "$GREEN[Thông tin]$NC Đang sao lưu tệp cấu hình..."
-    $backupName = "storage.json.backup_$(Get-Date -Format 'yyyyMMdd_HHmmss')"
-    Copy-Item $STORAGE_FILE "$
-
-
-
-
-Bạn đã nói:
-tôi cần bạn tích hợp key vào code này
-
-
-ChatGPT đã nói:
-Để tích hợp một key xác thực (ví dụ key 30 ngày) vào trong script PowerShell mà bạn đã gửi, bạn có thể sử dụng key này trong các phần của script như sau:
-
-Thêm key vào URL: Nếu key được sử dụng để xác thực khi tải tệp từ một URL, bạn có thể gắn key vào URL.
-
-Gửi key qua HTTP Header: Nếu yêu cầu gửi key qua header HTTP, bạn có thể thêm key vào phần header của yêu cầu.
-
-Cập nhật script với key 30 ngày:
-Giả sử bạn muốn thêm một key xác thực vào URL khi tải tệp, bạn có thể làm theo cách này:
-
-powershell
-Sao chép
-# Cài đặt mã hóa đầu ra là UTF-8
-$OutputEncoding = [System.Text.Encoding]::UTF8
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-
-# Định nghĩa màu sắc
-$RED = "`e[31m"
-$GREEN = "`e[32m"
-$YELLOW = "`e[33m"
-$BLUE = "`e[34m"
-$NC = "`e[0m"
-
-# Đường dẫn tệp cấu hình
-$STORAGE_FILE = "$env:APPDATA\Cursor\User\globalStorage\storage.json"
-$BACKUP_DIR = "$env:APPDATA\Cursor\User\globalStorage\backups"
-
-# Kiểm tra quyền quản trị viên
-function Test-Administrator {
-    $user = [Security.Principal.WindowsIdentity]::GetCurrent()
-    $principal = New-Object Security.Principal.WindowsPrincipal($user)
-    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-}
-
-if (-not (Test-Administrator)) {
-    Write-Host "$RED[Lỗi]$NC Vui lòng chạy script này với quyền quản trị viên"
-    Write-Host "Hãy nhấp chuột phải vào script và chọn 'Chạy với quyền quản trị viên'"
-    Read-Host "Nhấn phím Enter để thoát"
-    exit 1
-}
-
-# Hiển thị Logo
-Clear-Host
-Write-Host @"
-
-    ██████╗██╗   ██╗██████╗ ███████╗ ██████╗ ██████╗ 
-   ██╔════╝██║   ██║██╔══██╗██╔════╝██╔═══██╗██╔══██╗
-   ██║     ██║   ██║██████╔╝███████╗██║   ██║██████╔╝
-   ██║     ██║   ██║██╔══██╗╚════██║██║   ██║██╔══██╗
-   ╚██████╗╚██████╔╝██║  ██║███████║╚██████╔╝██║  ██║
-    ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
-
-"@
-Write-Host ("$BLUE================================$NC")
-Write-Host "$GREEN   Công cụ thay đổi ID thiết bị Cursor $NC"
-Write-Host "$YELLOW  Facebook: Luong Chi Dung $NC"
-Write-Host "$YELLOW  Zalo: 0847154088 $NC"
-Write-Host ("$BLUE================================$NC")
-Write-Host ""
-
-# Đặt key xác thực (key 30 ngày)
-$auth = "96f22dfdaff8a8a944ed93b3b5fbd20d"
-
-# Lấy và hiển thị phiên bản Cursor
-function Get-CursorVersion {
-    try {
-        # Kiểm tra đường dẫn chính
-        $packagePath = "$env:LOCALAPPDATA\Programs\cursor\resources\app\package.json"
-        
-        if (Test-Path $packagePath) {
-            $packageJson = Get-Content $packagePath -Raw | ConvertFrom-Json
-            if ($packageJson.version) {
-                Write-Host "$GREEN[Thông tin]$NC Phiên bản Cursor hiện tại: v$($packageJson.version)"
-                return $packageJson.version
-            }
-        }
-
-        # Kiểm tra đường dẫn thay thế
-        $altPath = "$env:LOCALAPPDATA\cursor\resources\app\package.json"
-        if (Test-Path $altPath) {
-            $packageJson = Get-Content $altPath -Raw | ConvertFrom-Json
-            if ($packageJson.version) {
-                Write-Host "$GREEN[Thông tin]$NC Phiên bản Cursor hiện tại: v$($packageJson.version)"
-                return $packageJson.version
-            }
-        }
-
-        Write-Host "$YELLOW[Cảnh báo]$NC Không thể phát hiện phiên bản Cursor"
-        Write-Host "$YELLOW[Lưu ý]$NC Vui lòng đảm bảo rằng Cursor đã được cài đặt chính xác"
-        return $null
-    }
-    catch {
-        Write-Host "$RED[Lỗi]$NC Lỗi khi lấy phiên bản Cursor: $_"
-        return $null
-    }
-}
-
-# Lấy và hiển thị thông tin phiên bản
-$cursorVersion = Get-CursorVersion
-Write-Host ""
-
-Write-Host "$YELLOW[Lưu ý quan trọng]$NC Phiên bản mới nhất là 0.47.x (được hỗ trợ)"
-Write-Host ""
-
-# Kiểm tra và đóng tiến trình Cursor
-Write-Host "$GREEN[Thông tin]$NC Kiểm tra tiến trình Cursor..."
-
-function Get-ProcessDetails {
-    param($processName)
-    Write-Host "$BLUE[Debug]$NC Đang lấy chi tiết tiến trình của ${processName}:" 
+    Write-Host "$BLUE[Debug]$NC Đang lấy chi tiết tiến trình của ${processName}:"
     Get-WmiObject Win32_Process -Filter "name='$processName'" | 
         Select-Object ProcessId, ExecutablePath, CommandLine | 
         Format-List
@@ -386,7 +213,7 @@ function Update-MachineGuid {
             $currentGuid = Get-ItemProperty -Path $registryPath -Name MachineGuid -ErrorAction SilentlyContinue
             if ($currentGuid) {
                 $originalGuid = $currentGuid.MachineGuid
-                Write-Host "$GREEN[Thông tin]$NC Giá trị MachineGuid hiện tại:" 
+                Write-Host "$GREEN[Thông tin]$NC Giá trị MachineGuid hiện tại:"
                 Write-Host "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Cryptography" 
                 Write-Host "    MachineGuid    REG_SZ    $originalGuid"
             } else {
@@ -429,7 +256,7 @@ function Update-MachineGuid {
         return $true
     }
     catch {
-        Write-Host "$RED[Lỗi]$NC Lỗi khi thao tác với registry: $($_.Exception.Message)" 
+        Write-Host "$RED[Lỗi]$NC Lỗi khi thao tác với registry: $($_.Exception.Message)"
         
         # Khôi phục từ sao lưu nếu có
         if (($backupFile -ne $null) -and (Test-Path $backupFile)) {
