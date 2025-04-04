@@ -46,7 +46,7 @@ Write-Host "$YELLOW  Zalo: 0847154088 $NC"
 Write-Host "$BLUE================================$NC"
 Write-Host ""
 
-# Đọc key và thời gian hết hạn từ tệp cấu hình trên GitHub
+# Lấy và hiển thị thông tin từ tệp key_usage.txt
 $keyUsageUrl = "https://raw.githubusercontent.com/luongchidung/resettrail/master/scripts/key_usage.txt"
 $keyUsageContent = Invoke-RestMethod -Uri $keyUsageUrl
 
@@ -56,23 +56,29 @@ if ($keyUsageContent) {
     $keyLine = $keyUsageContent | Select-String -Pattern "Key:"
     $expiryLine = $keyUsageContent | Select-String -Pattern "Expiry:"
 
-    # Lấy giá trị key và thời gian hết hạn
-    $key = $keyLine.Line.Split(":")[1].Trim()  # Tách giá trị key
-    $expiryDate = $expiryLine.Line.Split(":")[1].Trim()  # Tách thời gian hết hạn
+    # Kiểm tra nếu có giá trị key và thời gian hết hạn
+    if ($keyLine -and $expiryLine) {
+        # Lấy giá trị key và thời gian hết hạn
+        $key = $keyLine.Line.Split(":")[1].Trim()  # Tách giá trị key
+        $expiryDate = $expiryLine.Line.Split(":")[1].Trim()  # Tách thời gian hết hạn
 
-    # Hiển thị key và thời gian hết hạn
-    Write-Host "Key: $key"
-    Write-Host "Thời gian hết hạn: $expiryDate"
+        # Hiển thị key và thời gian hết hạn
+        Write-Host "Key: $key"
+        Write-Host "Thời gian hết hạn: $expiryDate"
 
-    # Kiểm tra thời gian hết hạn
-    $currentTime = Get-Date
+        # Kiểm tra thời gian hết hạn
+        $currentTime = Get-Date
 
-    # Kiểm tra nếu key hợp lệ và chưa hết hạn
-    if ($currentTime -lt [datetime]::Parse($expiryDate)) {
-        Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $expiryDate"
-        Write-Host "$GREEN[Thông tin]$NC Tiến hành thực hiện script."
+        # Kiểm tra nếu key hợp lệ và chưa hết hạn
+        if ($currentTime -lt [datetime]::ParseExact($expiryDate, 'yyyy-MM-ddTHH:mm:ss', $null)) {
+            Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $expiryDate"
+            Write-Host "$GREEN[Thông tin]$NC Tiến hành thực hiện script."
+        } else {
+            Write-Host "$RED[Lỗi]$NC Key đã hết hạn. Vui lòng cập nhật key mới."
+            exit 1
+        }
     } else {
-        Write-Host "$RED[Lỗi]$NC Key đã hết hạn. Vui lòng cập nhật key mới."
+        Write-Host "$RED[Lỗi]$NC Không tìm thấy key hoặc thời gian hết hạn trong tệp."
         exit 1
     }
 } else {
