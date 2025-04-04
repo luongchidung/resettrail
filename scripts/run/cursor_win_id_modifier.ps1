@@ -9,9 +9,9 @@ $YELLOW = "`e[33m"
 $BLUE = "`e[34m"
 $NC = "`e[0m"
 
-# Đường dẫn tệp cấu hình
+# Đường dẫn tệp cấu hình và tệp lưu trữ thời gian key
 $STORAGE_FILE = "$env:APPDATA\Cursor\User\globalStorage\storage.json"
-$BACKUP_DIR = "$env:APPDATA\Cursor\User\globalStorage\backups"
+$KEY_FILE = "$env:APPDATA\Cursor\User\key_activation.json"  # Lưu trữ thời gian kích hoạt key
 
 # Kiểm tra quyền quản trị viên
 function Test-Administrator {
@@ -23,42 +23,6 @@ function Test-Administrator {
 if (-not (Test-Administrator)) {
     Write-Host "$RED[Lỗi]$NC Vui lòng chạy script này với quyền quản trị viên"
     Write-Host "Hãy nhấp chuột phải vào script và chọn 'Chạy với quyền quản trị viên'"
-    Read-Host "Nhấn phím Enter để thoát"
-    exit 1
-}
-
-# Key và thời gian sử dụng
-$auth = "96f22dfdaff8a8a944ed93b3b5fbd20d" # Key cố định
-$validity_period = 30 # Số ngày hợp lệ kể từ ngày kích hoạt
-$activation_date = Get-Date
-$expiration_date = $activation_date.AddDays($validity_period)
-
-# Kiểm tra nếu key còn hiệu lực
-function Check-KeyValidity {
-    param (
-        [string]$key,
-        [datetime]$expirationDate
-    )
-    
-    if ($key -eq $auth) {
-        if ((Get-Date) -lt $expirationDate) {
-            Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian sử dụng còn lại: $($expirationDate - (Get-Date)).Days ngày"
-            return $true
-        }
-        else {
-            Write-Host "$RED[Lỗi]$NC Key đã hết hạn. Vui lòng nhập key mới."
-            return $false
-        }
-    }
-    else {
-        Write-Host "$RED[Lỗi]$NC Key không hợp lệ."
-        return $false
-    }
-}
-
-# Kiểm tra tính hợp lệ của key
-$validKey = Check-KeyValidity -key $auth -expirationDate $expiration_date
-if (-not $validKey) {
     Read-Host "Nhấn phím Enter để thoát"
     exit 1
 }
@@ -116,12 +80,42 @@ function Get-CursorVersion {
     }
 }
 
-# Lấy và hiển thị thông tin phiên bản
-$cursorVersion = Get-CursorVersion
-Write-Host ""
+# Lưu trữ thời gian kích hoạt key
+function Save-KeyActivationTime {
+    $activationTime = Get-Date
+    $expirationTime = $activationTime.AddDays(30)
+    
+    # Lưu thời gian kích hoạt và thời gian hết hạn vào tệp
+    $keyData = @{
+        "activationTime" = $activationTime.ToString("yyyy-MM-dd HH:mm:ss")
+        "expirationTime" = $expirationTime.ToString("yyyy-MM-dd HH:mm:ss")
+    }
 
-Write-Host "$YELLOW[Lưu ý quan trọng]$NC Phiên bản mới nhất là 0.47.x (được hỗ trợ)"
-Write-Host ""
+    $keyData | ConvertTo-Json | Set-Content -Path $KEY_FILE
+}
+
+# Kiểm tra và hiển thị thời gian sử dụng key
+function Check-KeyExpiration {
+    if (Test-Path $KEY_FILE) {
+        $keyData = Get-Content -Path $KEY_FILE | ConvertFrom-Json
+        $expirationTime = [datetime]::Parse($keyData.expirationTime)
+        $currentTime = Get-Date
+
+        # Tính toán thời gian còn lại
+        $timeRemaining = $expirationTime - $currentTime
+
+        if ($timeRemaining.TotalDays -gt 0) {
+            Write-Host "$GREEN[Thông tin]$NC Key của bạn hợp lệ. Thời gian còn lại: $($timeRemaining.Days) ngày, $([math]::Round($timeRemaining.Hours)) giờ."
+        } else {
+            Write-Host "$RED[Lỗi]$NC Key của bạn đã hết hạn."
+        }
+    } else {
+        Write-Host "$YELLOW[Cảnh báo]$NC Không tìm thấy tệp kích hoạt key. Vui lòng kích hoạt key trước."
+    }
+}
+
+# Kiểm tra thời gian hết hạn key
+Check-KeyExpiration
 
 # Kiểm tra và đóng tiến trình Cursor
 Write-Host "$GREEN[Thông tin]$NC Kiểm tra tiến trình Cursor..."
@@ -133,7 +127,6 @@ function Get-ProcessDetails {
         Select-Object ProcessId, ExecutablePath, CommandLine | 
         Format-List
 }
-
 # Định nghĩa số lần thử tối đa và thời gian chờ
 $MAX_RETRIES = 5
 $WAIT_TIME = 1
