@@ -41,9 +41,8 @@ Write-Host @"
 "@
 Write-Host "$BLUE================================$NC"
 Write-Host "$GREEN   Công cụ thay đổi ID thiết bị Cursor $NC"
-Write-Host "$YELLOW  Theo dõi tài khoản WeChat【煎饼果子卷AI】$NC"
-Write-Host "$YELLOW  Cùng chia sẻ thêm mẹo về Cursor và kiến thức AI (script miễn phí, tham gia nhóm qua việc theo dõi tài khoản WeChat có thêm nhiều mẹo và các chuyên gia) $NC"
-Write-Host "$YELLOW  [Lưu ý quan trọng] Công cụ này miễn phí, nếu hữu ích hãy theo dõi tài khoản WeChat【煎饼果子卷AI】$NC"
+Write-Host "$YELLOW  Facebook: Luong Chi Dung】$NC"
+Write-Host "$YELLOW  Zalo: 0847154088$NC"
 Write-Host "$BLUE================================$NC"
 Write-Host ""
 
