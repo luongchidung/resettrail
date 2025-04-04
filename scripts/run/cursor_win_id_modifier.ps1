@@ -360,12 +360,13 @@ try {
     # Hiển thị thông tin tài khoản WeChat
     Write-Host ""
     Write-Host "$GREEN================================$NC"
-    Write-Host "$YELLOW  Theo dõi tài khoản WeChat【煎饼果子卷AI】cùng chia sẻ thêm mẹo về Cursor và AI (script miễn phí, tham gia nhóm qua việc theo dõi tài khoản WeChat có thêm nhiều mẹo và các chuyên gia) $NC"
+    Write-Host "$GREEN   Công cụ thay đổi ID thiết bị Cursor $NC"
+    Write-Host "$YELLOW  Facebook: Luong Chi Dung】$NC"
     Write-Host "$GREEN================================$NC"
     Write-Host ""
     Write-Host "$GREEN[Thông tin]$NC Vui lòng khởi động lại Cursor để áp dụng cấu hình mới"
     Write-Host ""
-
+    
     # Hỏi người dùng có muốn vô hiệu hóa cập nhật tự động không
     Write-Host ""
     Write-Host "$YELLOW[Hỏi]$NC Bạn có muốn vô hiệu hóa tính năng cập nhật tự động của Cursor không?"
