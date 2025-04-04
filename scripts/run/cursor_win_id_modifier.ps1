@@ -70,7 +70,7 @@ catch {
 }
 
 
-# Tiếp tục phần kiểm tra key
+# Nhập key từ người dùng
 $auth = Read-Host "Nhập key của bạn"
 
 $keyValid = $false
@@ -96,6 +96,7 @@ if (-not $keyValid) {
     Read-Host "Nhấn phím Enter để thoát"
     exit 1
 }
+
 
 # Lấy và hiển thị phiên bản Cursor
 function Get-CursorVersion {
