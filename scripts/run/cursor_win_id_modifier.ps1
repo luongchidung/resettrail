@@ -93,7 +93,7 @@ Write-Host "$GREEN[Thông tin]$NC Kiểm tra tiến trình Cursor..."
 
 function Get-ProcessDetails {
     param($processName)
-    Write-Host "$BLUE[Debug]$NC Đang lấy chi tiết tiến trình của $processName:"
+    Write-Host "$BLUE[Debug]$NC Đang lấy chi tiết tiến trình của ${processName}:"
     Get-WmiObject Win32_Process -Filter "name='$processName'" | 
         Select-Object ProcessId, ExecutablePath, CommandLine | 
         Format-List
