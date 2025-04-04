@@ -53,8 +53,11 @@ $keyFileUrl = "https://raw.githubusercontent.com/luongchidung/cursor/master/scri
 $keyContent = Invoke-RestMethod -Uri $keyFileUrl
 
 # In ra nội dung để kiểm tra
+Write-Host "Nội dung tải về:"
 Write-Host $keyContent
 
+# Kiểm tra kiểu dữ liệu
+Write-Host "Kiểu dữ liệu của nội dung tải về: $($keyContent.GetType())"
 
 # Chuyển đổi nội dung JSON thành đối tượng PowerShell
 $keyData = $keyContent | ConvertFrom-Json
