@@ -41,8 +41,8 @@ Write-Host @"
 "@
 Write-Host "$BLUE================================$NC"
 Write-Host "$GREEN   Công cụ thay đổi ID thiết bị Cursor $NC"
-Write-Host "$YELLOW  Facebook: Luong Chi Dung】$NC"
-Write-Host "$YELLOW  Zalo: 0847154088$NC"
+Write-Host "$YELLOW  Facebook: Luong Chi Dung $NC"
+Write-Host "$YELLOW  Zalo: 0847154088 $NC"
 Write-Host "$BLUE================================$NC"
 Write-Host ""
 
