@@ -49,16 +49,29 @@ Write-Host ""
 # Định nghĩa URL của file key_usage.txt trên GitHub
 $keyFileUrl = "https://raw.githubusercontent.com/luongchidung/cursor/master/scripts/key_usage.txt"
 
-# Tải nội dung file về
-$keyContent = Invoke-RestMethod -Uri $keyFileUrl
+# Tải nội dung file về và kiểm tra
+try {
+    $keyContent = Invoke-RestMethod -Uri $keyFileUrl
+    Write-Host "Nội dung tải về: $keyContent"  # Kiểm tra xem dữ liệu có đúng không
+}
+catch {
+    Write-Host "$RED[Lỗi]$NC Không thể tải nội dung từ URL. Kiểm tra lại kết nối mạng hoặc URL."
+    exit 1
+}
 
-# Chuyển đổi nội dung JSON thành đối tượng PowerShell
-$keyData = $keyContent | ConvertFrom-Json
+# Kiểm tra xem nội dung có phải là JSON hợp lệ không
+try {
+    $keyData = $keyContent | ConvertFrom-Json
+    Write-Host "Nội dung JSON đã chuyển đổi thành công."
+} 
+catch {
+    Write-Host "$RED[Lỗi]$NC Không thể chuyển đổi nội dung thành JSON. Vui lòng kiểm tra lại tệp key_usage.txt."
+    exit 1
+}
 
-# Nhập key từ người dùng
+# Tiếp tục phần kiểm tra key
 $auth = Read-Host "Nhập key của bạn"
 
-# Kiểm tra key hợp lệ và ngày hết hạn
 $keyValid = $false
 foreach ($keyEntry in $keyData) {
     if ($keyEntry.key -eq $auth) {
