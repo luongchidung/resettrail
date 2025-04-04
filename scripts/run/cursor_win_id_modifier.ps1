@@ -540,37 +540,3 @@ try {
 Write-Host ""
 Read-Host "Nhấn phím Enter để thoát"
 exit 0
-
-# Chỉnh sửa khi ghi tệp
-function Write-ConfigFile {
-    param($config, $filePath)
-    
-    try {
-        # Sử dụng mã hóa UTF8 không BOM
-        $utf8NoBom = New-Object System.Text.UTF8Encoding $false
-        $jsonContent = $config | ConvertTo-Json -Depth 10
-        
-        # Sử dụng ký tự xuống dòng LF
-        $jsonContent = $jsonContent.Replace("`r`n", "`n")
-        
-        [System.IO.File]::WriteAllText(
-            [System.IO.Path]::GetFullPath($filePath),
-            $jsonContent,
-            $utf8NoBom
-        )
-        
-        Write-Host "$GREEN[Thông tin]$NC Đã ghi tệp cấu hình thành công (UTF8 không BOM)"
-    }
-    catch {
-        throw "Lỗi khi ghi tệp cấu hình: $_"
-    }
-}
-
-# Lấy và hiển thị thông tin phiên bản
-$cursorVersion = Get-CursorVersion
-Write-Host ""
-if ($cursorVersion) {
-    Write-Host "$GREEN[Thông tin]$NC Đã phát hiện phiên bản Cursor: $cursorVersion, tiếp tục thực hiện..."
-} else {
-    Write-Host "$YELLOW[Cảnh báo]$NC Không thể phát hiện phiên bản, tiếp tục thực hiện..."
-}
