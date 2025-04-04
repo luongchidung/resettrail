@@ -60,15 +60,6 @@ if ($auth -ne $validKey) {
     exit 1
 }
 
-$validKey = "dung1"
-$expiryDate = "2025-05-08 15:45:00"
-
-# Kiểm tra xem key có đúng không
-if ($auth -ne $validKey) {
-    Write-Host "$RED[Lỗi]$NC Key không hợp lệ."
-    Read-Host "Nhấn phím Enter để thoát"
-    exit 1
-}
 
 # Kiểm tra ngày hết hạn của key
 $currentTime = Get-Date
