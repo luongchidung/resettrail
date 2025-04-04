@@ -30,11 +30,11 @@ if (-not (Test-Administrator)) {
 # Yêu cầu người dùng nhập key
 $key = Read-Host "Vui lòng nhập key của bạn"
 
-# Lấy và hiển thị thông tin key từ GitHub (hoặc file cục bộ)
+# Lấy và hiển thị thông tin key từ GitHub
 $keyUsageUrl = "https://raw.githubusercontent.com/luongchidung/resettrail/master/scripts/key_usage.txt"
 $keyUsageContent = Invoke-RestMethod -Uri $keyUsageUrl
 
-# Kiểm tra nếu key có hợp lệ và chưa hết hạn
+# Tìm và tách key từ nội dung tệp
 $keyLine = $keyUsageContent | Select-String -Pattern '"key":' -First 1
 $expiryLine = $keyUsageContent | Select-String -Pattern '"expiry":' -First 1
 
