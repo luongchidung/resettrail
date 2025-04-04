@@ -9,9 +9,7 @@ $YELLOW = "`e[33m"
 $BLUE = "`e[34m"
 $NC = "`e[0m"
 
-# Đường dẫn tệp cấu hình và URL của key
-$STORAGE_FILE = "$env:APPDATA\Cursor\User\globalStorage\storage.json"
-$BACKUP_DIR = "$env:APPDATA\Cursor\User\globalStorage\backups"
+# Đường dẫn URL của key từ GitHub
 $KEY_URL = "https://raw.githubusercontent.com/luongchidung/resettrail/master/scripts/key_usage.txt"  # URL của file key trên GitHub
 
 # Kiểm tra quyền quản trị viên
@@ -28,24 +26,15 @@ if (-not (Test-Administrator)) {
     exit 1
 }
 
-# Tải file key_usage.txt từ GitHub
-$KeyFilePath = "$env:APPDATA\Cursor\User\key_usage.txt"
-Invoke-WebRequest -Uri $KEY_URL -OutFile $KeyFilePath
-
 # Kiểm tra và hiển thị thời gian sử dụng key
 function Check-KeyExpiration {
-    if (Test-Path $KeyFilePath) {
-        $keyData = Get-Content $KeyFilePath -Raw
-        $keyParts = $keyData.Split("`n")
-        
-        # Kiểm tra nếu file không chứa key hoặc ngày kích hoạt
-        if ($keyParts.Length -lt 2) {
-            Write-Host "$RED[Lỗi]$NC Dữ liệu key không hợp lệ trong file."
-            return $false
-        }
+    $keyData = Invoke-WebRequest -Uri $KEY_URL -UseBasicPipelining -ErrorAction Stop
+    $keyContent = $keyData.Content.Trim()
 
-        $key = $keyParts[0]
-        $activationDateStr = $keyParts[1]
+    # Kiểm tra nếu nội dung key hợp lệ
+    if ($keyContent -match "^(.*?)\n(.*?)$") {
+        $key = $matches[1]
+        $activationDateStr = $matches[2]
 
         # Cố gắng phân tích ngày kích hoạt
         try {
@@ -53,7 +42,7 @@ function Check-KeyExpiration {
         }
         catch {
             Write-Host "$RED[Lỗi]$NC Không thể phân tích ngày kích hoạt: $activationDateStr"
-            return $false
+            exit 1
         }
 
         $expirationDate = $activationDate.AddDays(30)
@@ -72,7 +61,7 @@ function Check-KeyExpiration {
             return $true
         }
     } else {
-        Write-Host "$YELLOW[Cảnh báo]$NC Key chưa được kích hoạt."
+        Write-Host "$RED[Lỗi]$NC Dữ liệu trong tệp key không hợp lệ."
         return $false
     }
 }
@@ -80,14 +69,12 @@ function Check-KeyExpiration {
 # Hiển thị logo và thông tin cơ bản
 Clear-Host
 Write-Host @"
-
     ██████╗██╗   ██╗██████╗ ███████╗ ██████╗ ██████╗ 
    ██╔════╝██║   ██║██╔══██╗██╔════╝██╔═══██╗██╔══██╗
    ██║     ██║   ██║██████╔╝███████╗██║   ██║██████╔╝
    ██║     ██║   ██║██╔══██╗╚════██║██║   ██║██╔══██╗
    ╚██████╗╚██████╔╝██║  ██║███████║╚██████╔╝██║  ██║
     ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
-
 "@
 Write-Host "$BLUE================================$NC"
 Write-Host "$GREEN   Công cụ thay đổi ID thiết bị Cursor $NC"
@@ -95,6 +82,36 @@ Write-Host "$YELLOW  Facebook: Luong Chi Dung $NC"
 Write-Host "$YELLOW  Zalo: 0847154088 $NC"
 Write-Host "$BLUE================================$NC"
 Write-Host ""
+
+# Yêu cầu nhập key và kiểm tra
+$keyInput = Read-Host "Nhập key để kiểm tra"
+if ($keyInput -match "^[a-f0-9]{32}$") {
+    # So sánh key nhập vào với key tải từ GitHub
+    $keyData = Invoke-WebRequest -Uri $KEY_URL -UseBasicPipelining -ErrorAction Stop
+    $keyContent = $keyData.Content.Trim()
+
+    if ($keyInput -eq $keyContent.Split("`n")[0]) {
+        Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Đang tiếp tục thực hiện..."
+        
+        # Kiểm tra ngày hết hạn của key
+        if (-not (Check-KeyExpiration)) {
+            Write-Host "$RED[Lỗi]$NC Key không hợp lệ hoặc đã hết hạn. Vui lòng kích hoạt lại."
+            Read-Host "Nhấn phím Enter để thoát"
+            exit 1
+        }
+    } else {
+        Write-Host "$RED[Lỗi]$NC Key không đúng. Vui lòng thử lại."
+        Read-Host "Nhấn phím Enter để thoát"
+        exit 1
+    }
+} else {
+    Write-Host "$RED[Lỗi]$NC Key không hợp lệ. Vui lòng nhập key hợp lệ."
+    Read-Host "Nhấn phím Enter để thoát"
+    exit 1
+}
+
+# Tiến hành các bước khác nếu key hợp lệ
+Write-Host "$GREEN[Thông tin]$NC Tiến hành các bước tiếp theo..."
 
 # Lấy và hiển thị phiên bản Cursor
 function Get-CursorVersion {
@@ -147,6 +164,7 @@ function Get-ProcessDetails {
         Select-Object ProcessId, ExecutablePath, CommandLine | 
         Format-List
 }
+
 
 # Định nghĩa số lần thử tối đa và thời gian chờ
 $MAX_RETRIES = 5
