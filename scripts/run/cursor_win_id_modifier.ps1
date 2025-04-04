@@ -28,7 +28,8 @@ if (-not (Test-Administrator)) {
 
 # Kiểm tra và hiển thị thời gian sử dụng key
 function Check-KeyExpiration {
-    $keyData = Invoke-WebRequest -Uri $KEY_URL -UseBasicPipelining -ErrorAction Stop
+    # Tải key từ GitHub
+    $keyData = Invoke-WebRequest -Uri $KEY_URL -ErrorAction Stop
     $keyContent = $keyData.Content.Trim()
 
     # Kiểm tra nếu nội dung key hợp lệ
@@ -87,7 +88,7 @@ Write-Host ""
 $keyInput = Read-Host "Nhập key để kiểm tra"
 if ($keyInput -match "^[a-f0-9]{32}$") {
     # So sánh key nhập vào với key tải từ GitHub
-    $keyData = Invoke-WebRequest -Uri $KEY_URL -UseBasicPipelining -ErrorAction Stop
+    $keyData = Invoke-WebRequest -Uri $KEY_URL -ErrorAction Stop
     $keyContent = $keyData.Content.Trim()
 
     if ($keyInput -eq $keyContent.Split("`n")[0]) {
@@ -164,6 +165,7 @@ function Get-ProcessDetails {
         Select-Object ProcessId, ExecutablePath, CommandLine | 
         Format-List
 }
+
 
 
 # Định nghĩa số lần thử tối đa và thời gian chờ
