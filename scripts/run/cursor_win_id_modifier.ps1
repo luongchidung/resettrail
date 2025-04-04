@@ -9,10 +9,10 @@ $YELLOW = "`e[33m"
 $BLUE = "`e[34m"
 $NC = "`e[0m"
 
-# Đường dẫn tệp cấu hình và tệp chứa key
+# Đường dẫn tệp cấu hình và URL của key
 $STORAGE_FILE = "$env:APPDATA\Cursor\User\globalStorage\storage.json"
 $BACKUP_DIR = "$env:APPDATA\Cursor\User\globalStorage\backups"
-$KEY_FILE = "$env:APPDATA\Cursor\User\key.txt" # Tệp để lưu key và ngày kích hoạt
+$KEY_URL = "https://raw.githubusercontent.com/luongchidung/resettrail/master/scripts/key_usage.txt"  # URL của file key trên GitHub
 
 # Kiểm tra quyền quản trị viên
 function Test-Administrator {
@@ -28,10 +28,14 @@ if (-not (Test-Administrator)) {
     exit 1
 }
 
+# Tải file key_usage.txt từ GitHub
+$KeyFilePath = "$env:APPDATA\Cursor\User\key_usage.txt"
+Invoke-WebRequest -Uri $KEY_URL -OutFile $KeyFilePath
+
 # Kiểm tra và hiển thị thời gian sử dụng key
 function Check-KeyExpiration {
-    if (Test-Path $KEY_FILE) {
-        $keyData = Get-Content $KEY_FILE -Raw
+    if (Test-Path $KeyFilePath) {
+        $keyData = Get-Content $KeyFilePath -Raw
         $keyParts = $keyData.Split("`n")
         $key = $keyParts[0]
         $activationDate = [datetime]::Parse($keyParts[1])
