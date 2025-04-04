@@ -27,40 +27,6 @@ if (-not (Test-Administrator)) {
     exit 1
 }
 
-# Yêu cầu người dùng nhập key
-$key = Read-Host "Vui lòng nhập key của bạn"
-
-# Lấy và hiển thị thông tin key từ GitHub
-$keyUsageUrl = "https://raw.githubusercontent.com/luongchidung/resettrail/master/scripts/key_usage.txt"
-$keyUsageContent = Invoke-RestMethod -Uri $keyUsageUrl
-
-# Tìm và tách key từ nội dung tệp
-$keyLine = $keyUsageContent | Select-String -Pattern '"key":' -First 1
-$expiryLine = $keyUsageContent | Select-String -Pattern '"expiry":' -First 1
-
-# Tách giá trị key và expiry date từ nội dung
-$keyFromFile = $keyLine.Line.Split(":")[1].Trim().Trim('"')
-$expiryDate = $expiryLine.Line.Split(":")[1].Trim().Trim('"')
-
-# Kiểm tra key nhập vào có đúng không
-if ($key -ne $keyFromFile) {
-    Write-Host "$RED[Lỗi]$NC Key không hợp lệ. Vui lòng kiểm tra lại."
-    exit 1
-}
-
-# Lấy ngày hiện tại
-$currentTime = Get-Date
-
-# Kiểm tra ngày hết hạn
-if ($currentTime -lt [datetime]::Parse($expiryDate)) {
-    Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $expiryDate"
-    Write-Host "$GREEN[Thông tin]$NC Tiến hành thực hiện script."
-} else {
-    Write-Host "$RED[Lỗi]$NC Key đã hết hạn. Vui lòng cập nhật key mới."
-    exit 1
-}
-
-
 # Hiển thị Logo
 Clear-Host
 Write-Host @"
@@ -79,6 +45,33 @@ Write-Host "$YELLOW  Facebook: Luong Chi Dung $NC"
 Write-Host "$YELLOW  Zalo: 0847154088 $NC"
 Write-Host "$BLUE================================$NC"
 Write-Host ""
+
+# Nhập key từ người dùng
+$auth = Read-Host "Nhập key của bạn"
+
+# Kiểm tra key hợp lệ và ngày hết hạn
+$validKey = "96f22dfdaff8a8a944ed93b3b5fbd20d"
+$expiryDate = "2025-05-05 15:45:00"
+
+# Kiểm tra xem key có đúng không
+if ($auth -ne $validKey) {
+    Write-Host "$RED[Lỗi]$NC Key không hợp lệ."
+    Read-Host "Nhấn phím Enter để thoát"
+    exit 1
+}
+
+# Kiểm tra ngày hết hạn của key
+$currentTime = Get-Date
+$expiryDate = [datetime]::Parse($expiryDate)
+
+if ($currentTime -gt $expiryDate) {
+    Write-Host "$RED[Lỗi]$NC Key đã hết hạn."
+    Read-Host "Nhấn phím Enter để thoát"
+    exit 1
+}
+
+Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $expiryDate"
+Write-Host "$GREEN[Thông tin]$NC Tiến hành thực thi script..."
 
 # Lấy và hiển thị phiên bản Cursor
 function Get-CursorVersion {
@@ -130,7 +123,7 @@ function Get-ProcessDetails {
     Get-WmiObject Win32_Process -Filter "name='$processName'" | 
         Select-Object ProcessId, ExecutablePath, CommandLine | 
         Format-List
-}
+
 
 # Định nghĩa số lần thử tối đa và thời gian chờ
 $MAX_RETRIES = 5
