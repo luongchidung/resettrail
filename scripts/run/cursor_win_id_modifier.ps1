@@ -123,7 +123,7 @@ function Get-ProcessDetails {
     Get-WmiObject Win32_Process -Filter "name='$processName'" | 
         Select-Object ProcessId, ExecutablePath, CommandLine | 
         Format-List
-
+}
 
 # Định nghĩa số lần thử tối đa và thời gian chờ
 $MAX_RETRIES = 5
