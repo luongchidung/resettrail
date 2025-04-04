@@ -46,43 +46,38 @@ Write-Host "$YELLOW  Zalo: 0847154088 $NC"
 Write-Host "$BLUE================================$NC"
 Write-Host ""
 
-# Lấy và hiển thị thông tin từ tệp key_usage.txt
+# Đọc và xử lý key từ tệp JSON trên GitHub
 $keyUsageUrl = "https://raw.githubusercontent.com/luongchidung/resettrail/master/scripts/key_usage.txt"
 $keyUsageContent = Invoke-RestMethod -Uri $keyUsageUrl
 
-# Kiểm tra nếu tệp key_usage.txt không rỗng
-if ($keyUsageContent) {
-    # Tách key và thời gian hết hạn từ nội dung tệp
-    $keyLine = $keyUsageContent | Select-String -Pattern "Key:"
-    $expiryLine = $keyUsageContent | Select-String -Pattern "Expiry:"
+# Kiểm tra xem dữ liệu có chứa key và expiry không
+if ($keyUsageContent.key -and $keyUsageContent.expiry) {
+    $key = $keyUsageContent.key
+    $expiryDate = $keyUsageContent.expiry
 
-    # Kiểm tra nếu có giá trị key và thời gian hết hạn
-    if ($keyLine -and $expiryLine) {
-        # Lấy giá trị key và thời gian hết hạn
-        $key = $keyLine.Line.Split(":")[1].Trim()  # Tách giá trị key
-        $expiryDate = $expiryLine.Line.Split(":")[1].Trim()  # Tách thời gian hết hạn
+    Write-Host "Key: $key"
+    Write-Host "Thời gian hết hạn: $expiryDate"
 
-        # Hiển thị key và thời gian hết hạn
-        Write-Host "Key: $key"
-        Write-Host "Thời gian hết hạn: $expiryDate"
+    # Kiểm tra thời gian hết hạn
+    $currentTime = Get-Date
 
-        # Kiểm tra thời gian hết hạn
-        $currentTime = Get-Date
-
-        # Kiểm tra nếu key hợp lệ và chưa hết hạn
-        if ($currentTime -lt [datetime]::ParseExact($expiryDate, 'yyyy-MM-ddTHH:mm:ss', $null)) {
+    # Kiểm tra nếu key hợp lệ và chưa hết hạn
+    try {
+        $parsedExpiryDate = [datetime]::ParseExact($expiryDate, 'yyyy-MM-dd HH:mm:ss', $null)
+        if ($currentTime -lt $parsedExpiryDate) {
             Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $expiryDate"
             Write-Host "$GREEN[Thông tin]$NC Tiến hành thực hiện script."
         } else {
             Write-Host "$RED[Lỗi]$NC Key đã hết hạn. Vui lòng cập nhật key mới."
             exit 1
         }
-    } else {
-        Write-Host "$RED[Lỗi]$NC Không tìm thấy key hoặc thời gian hết hạn trong tệp."
+    }
+    catch {
+        Write-Host "$RED[Lỗi]$NC Không thể phân tích thời gian hết hạn: $expiryDate"
         exit 1
     }
 } else {
-    Write-Host "$RED[Lỗi]$NC Không thể đọc tệp key_usage.txt từ GitHub."
+    Write-Host "$RED[Lỗi]$NC Không tìm thấy key hoặc thời gian hết hạn trong tệp cấu hình."
     exit 1
 }
 
