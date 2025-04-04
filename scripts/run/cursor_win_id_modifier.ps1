@@ -39,11 +39,11 @@ Write-Host @"
     ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
 
 "@
-Write-Host "$BLUE================================$NC"
+Write-Host ("$BLUE================================$NC")
 Write-Host "$GREEN   Công cụ thay đổi ID thiết bị Cursor $NC"
 Write-Host "$YELLOW  Facebook: Luong Chi Dung $NC"
 Write-Host "$YELLOW  Zalo: 0847154088 $NC"
-Write-Host "$BLUE================================$NC"
+Write-Host ("$BLUE================================$NC")
 Write-Host ""
 
 # Lấy và hiển thị phiên bản Cursor
@@ -209,11 +209,11 @@ Write-Host @"
     ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
 
 "@
-Write-Host "$BLUE================================$NC"
+Write-Host ("$BLUE================================$NC")
 Write-Host "$GREEN   Công cụ thay đổi ID thiết bị Cursor $NC"
 Write-Host "$YELLOW  Facebook: Luong Chi Dung $NC"
 Write-Host "$YELLOW  Zalo: 0847154088 $NC"
-Write-Host "$BLUE================================$NC"
+Write-Host ("$BLUE================================$NC")
 Write-Host ""
 
 # Đặt key xác thực (key 30 ngày)
