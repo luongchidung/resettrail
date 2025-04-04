@@ -50,8 +50,18 @@ Write-Host ""
 $auth = Read-Host "Nhập key của bạn"
 
 # Kiểm tra key hợp lệ và ngày hết hạn
-$validKey = "96f22dfdaff8a8a944ed93b3b5fbd20d"
+$validKey = "dung"
 $expiryDate = "2025-05-05 15:45:00"
+
+# Kiểm tra xem key có đúng không
+if ($auth -ne $validKey) {
+    Write-Host "$RED[Lỗi]$NC Key không hợp lệ."
+    Read-Host "Nhấn phím Enter để thoát"
+    exit 1
+}
+
+$validKey = "dung1"
+$expiryDate = "2025-05-08 15:45:00"
 
 # Kiểm tra xem key có đúng không
 if ($auth -ne $validKey) {
