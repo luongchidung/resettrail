@@ -52,35 +52,26 @@ $keyFileUrl = "https://raw.githubusercontent.com/luongchidung/cursor/master/scri
 # Tải nội dung file về
 $keyContent = Invoke-RestMethod -Uri $keyFileUrl
 
-# In ra nội dung để kiểm tra
-Write-Host "Nội dung tải về:"
-Write-Host $keyContent
-
-# Kiểm tra kiểu dữ liệu
+# Kiểm tra kiểu dữ liệu đã tải về
+Write-Host "Nội dung tải về: $keyContent"
 Write-Host "Kiểu dữ liệu của nội dung tải về: $($keyContent.GetType())"
-
-# Chuyển đổi nội dung JSON thành đối tượng PowerShell
-$keyData = $keyContent | ConvertFrom-Json
 
 # Nhập key từ người dùng
 $auth = Read-Host "Nhập key của bạn"
 
 # Kiểm tra key hợp lệ và ngày hết hạn
 $keyValid = $false
-foreach ($keyEntry in $keyData) {
-    if ($keyEntry.key -eq $auth) {
-        $keyValid = $true
-        $expiryDate = [datetime]::Parse($keyEntry.expiry)
-        $currentTime = Get-Date
-        if ($currentTime -gt $expiryDate) {
-            Write-Host "$RED[Lỗi]$NC Key đã hết hạn."
-            Read-Host "Nhấn phím Enter để thoát"
-            exit 1
-        } else {
-            Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $expiryDate"
-            Write-Host "$GREEN[Thông tin]$NC Tiến hành thực thi script..."
-            break
-        }
+if ($keyContent.key -eq $auth) {
+    $keyValid = $true
+    $expiryDate = [datetime]::Parse($keyContent.expiry)
+    $currentTime = Get-Date
+    if ($currentTime -gt $expiryDate) {
+        Write-Host "$RED[Lỗi]$NC Key đã hết hạn."
+        Read-Host "Nhấn phím Enter để thoát"
+        exit 1
+    } else {
+        Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $expiryDate"
+        Write-Host "$GREEN[Thông tin]$NC Tiến hành thực thi script..."
     }
 }
 
@@ -89,6 +80,7 @@ if (-not $keyValid) {
     Read-Host "Nhấn phím Enter để thoát"
     exit 1
 }
+
 
 
 # Lấy và hiển thị phiên bản Cursor
