@@ -27,6 +27,30 @@ if (-not (Test-Administrator)) {
     exit 1
 }
 
+# Lấy và hiển thị thông tin key từ GitHub (hoặc file cục bộ)
+$keyUsageUrl = "https://raw.githubusercontent.com/luongchidung/resettrail/master/scripts/key_usage.txt"
+$keyUsageContent = Invoke-RestMethod -Uri $keyUsageUrl
+
+# Kiểm tra nếu key có hợp lệ và chưa hết hạn
+$keyLine = $keyUsageContent | Select-String -Pattern '"key":' -First 1
+$expiryLine = $keyUsageContent | Select-String -Pattern '"expiry":' -First 1
+
+# Tách giá trị key và expiry date từ nội dung
+$key = $keyLine.Line.Split(":")[1].Trim().Trim('"')
+$expiryDate = $expiryLine.Line.Split(":")[1].Trim().Trim('"')
+
+# Lấy ngày hiện tại
+$currentTime = Get-Date
+
+# Kiểm tra ngày hết hạn
+if ($currentTime -lt [datetime]::Parse($expiryDate)) {
+    Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $expiryDate"
+    Write-Host "$GREEN[Thông tin]$NC Tiến hành thực hiện script."
+} else {
+    Write-Host "$RED[Lỗi]$NC Key đã hết hạn. Vui lòng cập nhật key mới."
+    exit 1
+}
+
 # Hiển thị Logo
 Clear-Host
 Write-Host @"
