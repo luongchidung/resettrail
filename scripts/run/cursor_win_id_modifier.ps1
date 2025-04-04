@@ -126,6 +126,134 @@ function Get-ProcessDetails {
     Get-WmiObject Win32_Process -Filter "name='$processName'" | 
         Select-Object ProcessId, ExecutablePath, CommandLine | 
         Format-List
+}# Cài đặt mã hóa đầu ra là UTF-8
+$OutputEncoding = [System.Text.Encoding]::UTF8
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+
+# Định nghĩa màu sắc
+$RED = "`e[31m"
+$GREEN = "`e[32m"
+$YELLOW = "`e[33m"
+$BLUE = "`e[34m"
+$NC = "`e[0m"
+
+# Đường dẫn tệp cấu hình và tệp lưu trữ thời gian key
+$STORAGE_FILE = "$env:APPDATA\Cursor\User\globalStorage\storage.json"
+$KEY_FILE = "$env:APPDATA\Cursor\User\key_activation.json"  # Lưu trữ thời gian kích hoạt key
+
+# Kiểm tra quyền quản trị viên
+function Test-Administrator {
+    $user = [Security.Principal.WindowsIdentity]::GetCurrent()
+    $principal = New-Object Security.Principal.WindowsPrincipal($user)
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+if (-not (Test-Administrator)) {
+    Write-Host "$RED[Lỗi]$NC Vui lòng chạy script này với quyền quản trị viên"
+    Write-Host "Hãy nhấp chuột phải vào script và chọn 'Chạy với quyền quản trị viên'"
+    Read-Host "Nhấn phím Enter để thoát"
+    exit 1
+}
+
+# Hiển thị Logo
+Clear-Host
+Write-Host @"
+
+    ██████╗██╗   ██╗██████╗ ███████╗ ██████╗ ██████╗ 
+   ██╔════╝██║   ██║██╔══██╗██╔════╝██╔═══██╗██╔══██╗
+   ██║     ██║   ██║██████╔╝███████╗██║   ██║██████╔╝
+   ██║     ██║   ██║██╔══██╗╚════██║██║   ██║██╔══██╗
+   ╚██████╗╚██████╔╝██║  ██║███████║╚██████╔╝██║  ██║
+    ╚═════╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝
+
+"@
+Write-Host "$BLUE================================$NC"
+Write-Host "$GREEN   Công cụ thay đổi ID thiết bị Cursor $NC"
+Write-Host "$YELLOW  Facebook: Luong Chi Dung $NC"
+Write-Host "$YELLOW  Zalo: 0847154088 $NC"
+Write-Host "$BLUE================================$NC"
+Write-Host ""
+
+# Lấy và hiển thị phiên bản Cursor
+function Get-CursorVersion {
+    try {
+        # Kiểm tra đường dẫn chính
+        $packagePath = "$env:LOCALAPPDATA\Programs\cursor\resources\app\package.json"
+        
+        if (Test-Path $packagePath) {
+            $packageJson = Get-Content $packagePath -Raw | ConvertFrom-Json
+            if ($packageJson.version) {
+                Write-Host "$GREEN[Thông tin]$NC Phiên bản Cursor hiện tại: v$($packageJson.version)"
+                return $packageJson.version
+            }
+        }
+
+        # Kiểm tra đường dẫn thay thế
+        $altPath = "$env:LOCALAPPDATA\cursor\resources\app\package.json"
+        if (Test-Path $altPath) {
+            $packageJson = Get-Content $altPath -Raw | ConvertFrom-Json
+            if ($packageJson.version) {
+                Write-Host "$GREEN[Thông tin]$NC Phiên bản Cursor hiện tại: v$($packageJson.version)"
+                return $packageJson.version
+            }
+        }
+
+        Write-Host "$YELLOW[Cảnh báo]$NC Không thể phát hiện phiên bản Cursor"
+        Write-Host "$YELLOW[Lưu ý]$NC Vui lòng đảm bảo rằng Cursor đã được cài đặt chính xác"
+        return $null
+    }
+    catch {
+        Write-Host "$RED[Lỗi]$NC Lỗi khi lấy phiên bản Cursor: $_"
+        return $null
+    }
+}
+
+# Lưu trữ thời gian kích hoạt key
+function Save-KeyActivationTime {
+    $activationTime = Get-Date
+    $expirationTime = $activationTime.AddDays(30)
+    
+    # Lưu thời gian kích hoạt và thời gian hết hạn vào tệp
+    $keyData = @{
+        "activationTime" = $activationTime.ToString("yyyy-MM-dd HH:mm:ss")
+        "expirationTime" = $expirationTime.ToString("yyyy-MM-dd HH:mm:ss")
+    }
+
+    $keyData | ConvertTo-Json | Set-Content -Path $KEY_FILE
+}
+
+# Kiểm tra và hiển thị thời gian sử dụng key
+function Check-KeyExpiration {
+    if (Test-Path $KEY_FILE) {
+        $keyData = Get-Content -Path $KEY_FILE | ConvertFrom-Json
+        $expirationTime = [datetime]::Parse($keyData.expirationTime)
+        $currentTime = Get-Date
+
+        # Tính toán thời gian còn lại
+        $timeRemaining = $expirationTime - $currentTime
+
+        if ($timeRemaining.TotalDays -gt 0) {
+            Write-Host "$GREEN[Thông tin]$NC Key của bạn hợp lệ. Thời gian còn lại: $($timeRemaining.Days) ngày, $([math]::Round($timeRemaining.Hours)) giờ."
+        } else {
+            Write-Host "$RED[Lỗi]$NC Key của bạn đã hết hạn."
+        }
+    } else {
+        Write-Host "$YELLOW[Cảnh báo]$NC Không tìm thấy tệp kích hoạt key. Vui lòng kích hoạt key trước."
+    }
+}
+
+# Kiểm tra thời gian hết hạn key
+Check-KeyExpiration
+
+# Kiểm tra và đóng tiến trình Cursor
+Write-Host "$GREEN[Thông tin]$NC Kiểm tra tiến trình Cursor..."
+
+function Get-ProcessDetails {
+    param($processName)
+    Write-Host "$BLUE[Debug]$NC Đang lấy chi tiết tiến trình của ${processName}:"
+    Get-WmiObject Win32_Process -Filter "name='$processName'" | 
+        Select-Object ProcessId, ExecutablePath, CommandLine | 
+        Format-List
 }
 # Định nghĩa số lần thử tối đa và thời gian chờ
 $MAX_RETRIES = 5
