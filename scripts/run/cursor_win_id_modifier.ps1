@@ -46,32 +46,43 @@ Write-Host "$YELLOW  Zalo: 0847154088 $NC"
 Write-Host "$BLUE================================$NC"
 Write-Host ""
 
+# Định nghĩa URL của file key_usage.txt trên GitHub
+$keyFileUrl = "https://raw.githubusercontent.com/luongchidung/cursor/master/scripts/key_usage.txt"
+
+# Tải nội dung file về
+$keyContent = Invoke-RestMethod -Uri $keyFileUrl
+
+# Chuyển đổi nội dung JSON thành đối tượng PowerShell
+$keyData = $keyContent | ConvertFrom-Json
+
 # Nhập key từ người dùng
 $auth = Read-Host "Nhập key của bạn"
 
 # Kiểm tra key hợp lệ và ngày hết hạn
-$validKey = "96f22dfdaff8a8a944ed93b3b5fbd20d"
-$expiryDate = "2025-05-05 15:45:00"
+$keyValid = $false
+foreach ($keyEntry in $keyData) {
+    if ($keyEntry.key -eq $auth) {
+        $keyValid = $true
+        $expiryDate = [datetime]::Parse($keyEntry.expiry)
+        $currentTime = Get-Date
+        if ($currentTime -gt $expiryDate) {
+            Write-Host "$RED[Lỗi]$NC Key đã hết hạn."
+            Read-Host "Nhấn phím Enter để thoát"
+            exit 1
+        } else {
+            Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $expiryDate"
+            Write-Host "$GREEN[Thông tin]$NC Tiến hành thực thi script..."
+            break
+        }
+    }
+}
 
-# Kiểm tra xem key có đúng không
-if ($auth -ne $validKey) {
+if (-not $keyValid) {
     Write-Host "$RED[Lỗi]$NC Key không hợp lệ."
     Read-Host "Nhấn phím Enter để thoát"
     exit 1
 }
 
-# Kiểm tra ngày hết hạn của key
-$currentTime = Get-Date
-$expiryDate = [datetime]::Parse($expiryDate)
-
-if ($currentTime -gt $expiryDate) {
-    Write-Host "$RED[Lỗi]$NC Key đã hết hạn."
-    Read-Host "Nhấn phím Enter để thoát"
-    exit 1
-}
-
-Write-Host "$GREEN[Thông tin]$NC Key hợp lệ. Thời gian hết hạn: $expiryDate"
-Write-Host "$GREEN[Thông tin]$NC Tiến hành thực thi script..."
 
 # Lấy và hiển thị phiên bản Cursor
 function Get-CursorVersion {
